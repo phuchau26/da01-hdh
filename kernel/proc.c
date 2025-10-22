@@ -296,8 +296,11 @@ fork(void)
   }
   np->sz = p->sz;
 
+  np->tmask = p->tmask;
+
   // copy saved user registers.
   *(np->trapframe) = *(p->trapframe);
+
 
   // Cause fork to return 0 in the child.
   np->trapframe->a0 = 0;

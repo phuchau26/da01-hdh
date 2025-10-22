@@ -5,6 +5,9 @@
 #include "memlayout.h"
 #include "spinlock.h"
 #include "proc.h"
+#include "syscall.h"
+
+extern void argint(int, int*);
 
 uint64
 sys_exit(void)
@@ -90,4 +93,29 @@ sys_uptime(void)
   xticks = ticks;
   release(&tickslock);
   return xticks;
+}
+
+
+uint64
+sys_hello(void)
+{
+    printf("Hello, world!\n");
+    return 0;
+}
+
+// kernel/sysproc.c
+
+uint64
+sys_trace(void)
+{
+  int mask;
+  
+  // Dùng argint để lấy đối số thứ 0 (mask). 
+  // Vì argint là void, nó không cần kiểm tra lỗi.
+  argint(0, &mask); 
+  
+  struct proc *p = myproc();
+
+  p->tmask = mask; // Gán mask cho tiến trình hiện tại
+  return 0; // Trả về 0 (thành công)
 }

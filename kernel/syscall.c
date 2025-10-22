@@ -101,6 +101,8 @@ extern uint64 sys_unlink(void);
 extern uint64 sys_link(void);
 extern uint64 sys_mkdir(void);
 extern uint64 sys_close(void);
+extern uint64 sys_trace(void); // Khai báo extern cho sys_trace
+
 
 // An array mapping syscall numbers from syscall.h
 // to the function that handles the system call.
@@ -126,7 +128,36 @@ static uint64 (*syscalls[])(void) = {
 [SYS_link]    sys_link,
 [SYS_mkdir]   sys_mkdir,
 [SYS_close]   sys_close,
+[SYS_trace]   sys_trace, // <--- ĐÃ SỬA: Thêm ánh xạ hàm xử lý cho SYS_trace
 };
+
+// Mảng tên syscall
+char *syscallnames[] = {
+[SYS_fork]    "fork",
+[SYS_exit]    "exit",
+[SYS_wait]    "wait",
+[SYS_pipe]    "pipe",
+[SYS_read]    "read",
+[SYS_kill]    "kill",
+[SYS_exec]    "exec",
+[SYS_fstat]   "fstat",
+[SYS_chdir]   "chdir",
+[SYS_dup]     "dup",
+[SYS_getpid]  "getpid",
+[SYS_sbrk]    "sbrk",
+[SYS_sleep]   "sleep",
+[SYS_uptime]  "uptime",
+[SYS_open]    "open",
+[SYS_write]   "write",
+[SYS_mknod]   "mknod",
+[SYS_unlink]  "unlink",
+[SYS_link]    "link",
+[SYS_mkdir]   "mkdir",
+[SYS_close]   "close",
+[SYS_trace]   "trace",
+};
+
+// kernel/syscall.c
 
 void
 syscall(void)
@@ -135,12 +166,19 @@ syscall(void)
   struct proc *p = myproc();
 
   num = p->trapframe->a7;
+  // Kiểm tra: num > 0, num nằm trong phạm vi mảng, và con trỏ hàm không NULL
   if(num > 0 && num < NELEM(syscalls) && syscalls[num]) {
-    // Use num to lookup the system call function for num, call it,
-    // and store its return value in p->trapframe->a0
+    // Lời gọi hệ thống hợp lệ
     p->trapframe->a0 = syscalls[num]();
+    
+    // Bắt đầu TRACING
+    if ((p->tmask & (1 << num)) != 0) {
+      // Syscall num nằm trong mask của tiến trình p
+      // Đã sửa lỗi dùng %d cho uint64 bằng cách ép kiểu sang int
+      printf("%d: syscall %s -> %d\n", p->pid, syscallnames[num], (int)p->trapframe->a0);
+    }
   } else {
-    printf("%d %s: unknown sys call %d\n",
+    printf("%d %s: unknown syscall %d\n",
             p->pid, p->name, num);
     p->trapframe->a0 = -1;
   }
