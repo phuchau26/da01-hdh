@@ -6,8 +6,8 @@
 #include "spinlock.h"
 #include "proc.h"
 #include "syscall.h"
-
-extern void argint(int, int*);
+#include "sysinfo.h"
+extern void argint(int, int *);
 
 uint64
 sys_exit(void)
@@ -15,7 +15,7 @@ sys_exit(void)
   int n;
   argint(0, &n);
   exit(n);
-  return 0;  // not reached
+  return 0; // not reached
 }
 
 uint64
@@ -46,7 +46,7 @@ sys_sbrk(void)
 
   argint(0, &n);
   addr = myproc()->sz;
-  if(growproc(n) < 0)
+  if (growproc(n) < 0)
     return -1;
   return addr;
 }
@@ -58,12 +58,14 @@ sys_sleep(void)
   uint ticks0;
 
   argint(0, &n);
-  if(n < 0)
+  if (n < 0)
     n = 0;
   acquire(&tickslock);
   ticks0 = ticks;
-  while(ticks - ticks0 < n){
-    if(killed(myproc())){
+  while (ticks - ticks0 < n)
+  {
+    if (killed(myproc()))
+    {
       release(&tickslock);
       return -1;
     }
@@ -95,12 +97,11 @@ sys_uptime(void)
   return xticks;
 }
 
-
 uint64
 sys_hello(void)
 {
-    printf("Hello, world!\n");
-    return 0;
+  printf("Hello, world!\n");
+  return 0;
 }
 
 // kernel/sysproc.c
@@ -109,13 +110,26 @@ uint64
 sys_trace(void)
 {
   int mask;
-  
-  // Dùng argint để lấy đối số thứ 0 (mask). 
+
+  // Dùng argint để lấy đối số thứ 0 (mask).
   // Vì argint là void, nó không cần kiểm tra lỗi.
-  argint(0, &mask); 
-  
+  argint(0, &mask);
+
   struct proc *p = myproc();
 
   p->tmask = mask; // Gán mask cho tiến trình hiện tại
-  return 0; // Trả về 0 (thành công)
+  return 0;        // Trả về 0 (thành công)
+}
+
+uint64 sys_sysinfo(void)
+{
+  struct sysinfo info;
+  uint64 user_addr = 0;
+  argaddr(0, &user_addr);
+  info.freemem = countFreeMemory();
+  info.nproc = countUnusedProc();
+  info.nfiles = countOFile();
+  if (copyout(myproc()->pagetable, user_addr, (char *)&info, sizeof(info)) < 0)
+    return -1;
+  return 0;
 }
