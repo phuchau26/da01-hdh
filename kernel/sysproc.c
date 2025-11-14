@@ -127,7 +127,7 @@ uint64 sys_sysinfo(void)
   uint64 user_addr = 0;
   argaddr(0, &user_addr);
   info.freemem = countFreeMemory();
-  info.nproc = countUnusedProc();
+  info.nproc = countProc();
   info.nfiles = countOFile();
   if (copyout(myproc()->pagetable, user_addr, (char *)&info, sizeof(info)) < 0)
     return -1;

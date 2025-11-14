@@ -715,7 +715,7 @@ void procdump(void)
   }
 }
 
-uint64 countUnusedProc(void)
+uint64 countProc(void)
 {
   struct proc *tmp;
   int count = 0;

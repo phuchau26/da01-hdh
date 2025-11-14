@@ -189,5 +189,5 @@ void virtio_disk_intr(void);
 #define NELEM(x) (sizeof(x) / sizeof((x)[0]))
 
 uint64 countFreeMemory(void);
-uint64 countUnusedProc(void);
+uint64 countProc(void);
 uint64 countOFile(void);
